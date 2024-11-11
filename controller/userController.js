@@ -1,6 +1,6 @@
 import User from "../models/user.js";
-import bcrypt from 'bcryptjs';
-import JWT from 'jsonwebtoken';
+import bcrypt from "bcryptjs";
+import JWT from "jsonwebtoken";
 
 // Helper function for validating email format
 const isValidEmail = (email) => {
@@ -19,30 +19,48 @@ const isValidPassword = (password) => {
   return password && password.length >= 6;
 };
 
+// User Registration
+
 export const register = async (req, res) => {
   const { name, email, password } = req.body;
 
   // Validate input data
   if (!name || !email || !password) {
-    return res.status(400).json({ success:false, message: "All fields are required" });
+    return res
+      .status(400)
+      .json({ success: false, message: "All fields are required" });
   }
 
   if (!isValidUsername(name)) {
-    return res.status(400).json({ success:false,message: "Name must only contain alphabets and spaces" });
+    return res
+      .status(400)
+      .json({
+        success: false,
+        message: "Name must only contain alphabets and spaces",
+      });
   }
 
   if (!isValidEmail(email)) {
-    return res.status(400).json({ success:false,message: "Invalid email format" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid email format" });
   }
 
   if (!isValidPassword(password)) {
-    return res.status(400).json({ success:false,message: "Password must be at least 6 characters" });
+    return res
+      .status(400)
+      .json({
+        success: false,
+        message: "Password must be at least 6 characters",
+      });
   }
 
   try {
     const userExists = await User.findOne({ email });
     if (userExists) {
-      return res.status(400).json({success:false, message: "User already exists" });
+      return res
+        .status(400)
+        .json({ success: false, message: "User already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -61,6 +79,8 @@ export const register = async (req, res) => {
     res.status(500).json({ message: "Error during Register", error });
   }
 };
+
+// User Login
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
@@ -85,14 +105,19 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: "Invalid Password" });
     }
 
-    const token = JWT.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    return res.status(200).json({ token, message: "Successfully Logged In", success: true });
+    const token = JWT.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1d",
+    });
+    return res
+      .status(200)
+      .json({ token, message: "Successfully Logged In", success: true });
   } catch (error) {
     res.status(500).json({ message: "Error during Login", error });
   }
 };
 
 // Forgot Password
+
 export const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
@@ -107,7 +132,9 @@ export const forgotPassword = async (req, res) => {
       return res.status(400).json({ message: "Email not found" });
     }
 
-    const token = JWT.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = JWT.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
 
     res.json({ success: true, token });
   } catch (error) {
@@ -117,24 +144,37 @@ export const forgotPassword = async (req, res) => {
 };
 
 // Reset Password
+
 export const resetPassword = async (req, res) => {
   const { password } = req.body;
 
   if (!isValidPassword(password)) {
-    return res.status(400).json({ success:false,message: "Password must be at least 6 characters" });
+    return res
+      .status(400)
+      .json({
+        success: false,
+        message: "Password must be at least 6 characters",
+      });
   }
 
   try {
     const user = await User.findById(req.user.userId);
 
     if (!user) {
-      return res.status(400).json({success:false, message: "User not found" });
+      return res
+        .status(400)
+        .json({ success: false, message: "User not found" });
     }
 
     // Check if the new password is the same as the current one
     const isSamePassword = await bcrypt.compare(password, user.password);
     if (isSamePassword) {
-      return res.status(400).json({ success:false,message: "New password must be different from the old one" });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "New password must be different from the old one",
+        });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -147,16 +187,17 @@ export const resetPassword = async (req, res) => {
   }
 };
 
+// fetching username
+
 export const getUser = async (req, res) => {
   try {
-    // `req.user` will be populated by the authentication middleware
-    const user = await User.findById(req.user.id);  // Use `_id` to find the user
+    const user = await User.findById(req.user.id);
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
-    res.json({ username: user.name });  // Send back the username
+    res.json({ username: user.name });
   } catch (error) {
-    res.status(500).json({ message: 'Error Fetching the User Details' });
+    res.status(500).json({ message: "Error Fetching the User Details" });
     console.log(error);
   }
 };

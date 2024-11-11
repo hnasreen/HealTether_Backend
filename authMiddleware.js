@@ -5,7 +5,7 @@ const authMiddleware = async (req, res, next) => {
   if (!token) return res.status(401).json("User Authentication Failed");
   try {
     const decoded = await JWT.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; 
+    req.user = decoded;
     next();
   } catch (error) {
     res.status(401).json("User Authentication Failed");
